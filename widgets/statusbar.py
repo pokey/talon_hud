@@ -95,11 +95,12 @@ class HeadUpStatusBar(BaseWidget):
     def update_icons(self, new_content):
         mode = self.content["mode"] if "mode" not in new_content else new_content["mode"]
     
-        self.icons = [{
-            "id": "mode",
-            "image": mode + "_icon",
-            "clickable": mode != "sleep"
-        }]
+        # self.icons = [{
+        #     "id": "mode",
+        #     "image": mode + "_icon",
+        #     "clickable": mode != "sleep"
+        # }]
+        self.icons = []
         
         if "active_microphone" in self.subscribed_content and "active_microphone" in new_content and new_content["active_microphone"]:
             self.icons.append({
@@ -230,7 +231,7 @@ class HeadUpStatusBar(BaseWidget):
 
         # Draw selected programming language
         # TODO - FAKE BOLD until I find out how to properly use font style
-        if ((self.content["mode"] == "command" and self.content["programming_language"]["ext"] is not None) or self.content["mode"] == "dictation"):
+        if False:
             text_colour =  self.theme.get_colour('text_forced_colour') if self.content["programming_language"]["forced"] else self.theme.get_colour('text_colour')
             paint.shader = linear_gradient(self.x, self.y, self.x, self.y + element_height, (text_colour, text_colour))
             paint.style = paint.Style.STROKE
@@ -240,12 +241,12 @@ class HeadUpStatusBar(BaseWidget):
             paint.style = paint.Style.FILL
             canvas.draw_text(self.content["programming_language"]["ext"] if self.content["mode"] == "command" else "Dictate", text_x, height_center - circle_margin + paint.textsize / 2)
 
-        # Draw closing icon
-        paint.style = paint.Style.FILL
-        close_colour = self.theme.get_colour('close_icon_hover_colour') if self.icon_hover_index == len(self.icons) else self.theme.get_colour('close_icon_accent_colour')
-        paint.shader = linear_gradient(self.x, self.y, self.x, self.y + element_height, (self.theme.get_colour('close_icon_colour'), close_colour))
-        close_icon_diameter = icon_diameter / 2
-        self.draw_icon(canvas, self.x + element_width - close_icon_diameter - close_icon_diameter / 2 - stroke_width, height_center - close_icon_diameter / 2, close_icon_diameter, paint, {'id': 'close', 'image': None})
+        # # Draw closing icon
+        # paint.style = paint.Style.FILL
+        # close_colour = self.theme.get_colour('close_icon_hover_colour') if self.icon_hover_index == len(self.icons) else self.theme.get_colour('close_icon_accent_colour')
+        # paint.shader = linear_gradient(self.x, self.y, self.x, self.y + element_height, (self.theme.get_colour('close_icon_colour'), close_colour))
+        # close_icon_diameter = icon_diameter / 2
+        # self.draw_icon(canvas, self.x + element_width - close_icon_diameter - close_icon_diameter / 2 - stroke_width, height_center - close_icon_diameter / 2, close_icon_diameter, paint, {'id': 'close', 'image': None})
 
         # Reset the blink colour when the blink is finished
         if not continue_drawing:

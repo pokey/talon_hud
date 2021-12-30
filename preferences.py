@@ -2,8 +2,8 @@
 import os
 from talon import ui
 
-preferences_dir = os.path.dirname(os.path.abspath(__file__)) # default
-user_preferences_file_dir =  preferences_dir + "/preferences/" # default
+preferences_dir = "/Users/pokey/src/pokey_talon" # default
+user_preferences_file_dir =  preferences_dir + "/talon-hud-settings/" # default
 #from talon_init import TALON_USER # custom
 #user_preferences_file_dir = os.path.join(TALON_USER, "test", "") # custom
 
