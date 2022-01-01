@@ -6,7 +6,7 @@ dictation_blink_colour,F49609
 top_stroke_colour,DDDDDD
 down_stroke_colour,999999
 parrot_switch_mode_colour,FFE500
-sleep_mode_colour,777777
+sleep_mode_colour,222222
 command_mode_colour,FFFFFF
 dictation_mode_colour,FFFFFF
 button_colour,FFFFFF
@@ -18,14 +18,14 @@ intro_animation_start_colour,000000FF
 intro_animation_end_colour,DDDDDD
 text_colour,000000FF
 text_forced_colour,990000
-event_log_background,F5F5F5
-event_log_text_colour,888888
+event_log_background,FFFFFF
+event_log_text_colour,000000
 event_log_opacity,0.9
 event_log_text_opacity,0.9
 event_log_focussed_opacity,1
 event_log_ttl_duration_seconds,9
 event_log_between_margin,10
-event_log_horizontal_padding,8
+event_log_horizontal_padding,4
 event_log_vertical_padding,4
 ability_activation_colour,FFFFFFAA
 text_box_background,F5F5F5
