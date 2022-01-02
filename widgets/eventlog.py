@@ -316,6 +316,6 @@ class HeadUpEventLog(BaseWidget):
                 text_height = 0
             #canvas.draw_rect(ui.Rect(x, y, self.width, 1))            
             
-            text_y = y
+            text_y = y + 1
             text_height = max(text_height, text.height)
             canvas.draw_text(text.text, x + text.x, text_y )
