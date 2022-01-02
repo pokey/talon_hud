@@ -16,11 +16,14 @@ class HistoryPoller(Poller):
         speech_system.unregister("phrase", self.on_phrase)
             
     def on_phrase(self, j):
+        if not actions.speech.enabled():
+            return
+
         try:
             word_list = getattr(j["parsed"], "_unmapped", j["phrase"])
         except:
             word_list = j["phrase"]
-        command = " ".join(word.split("\\")[0] for word in word_list)
+        command = parse_phrase(word_list)
         actions.user.hud_add_log("command", command)
         
         # Debugging data
@@ -34,4 +37,15 @@ class HistoryPoller(Poller):
             time_ms += meta["audio_ms"] if "audio_ms" in meta else 0
             model = meta["desc"] if "desc" in meta else "-"
         
-        actions.user.hud_add_phrase(command, timestamp, float(time_ms), model, mic)        
+        actions.user.hud_add_phrase(command, timestamp, float(time_ms), model, mic)
+
+
+def parse_phrase(word_list):
+    words = [word.split("\\")[0] for word in word_list]
+
+    try:
+        words = words[: words.index("drowse")]
+    except ValueError:
+        pass
+
+    return " ".join(words)        
