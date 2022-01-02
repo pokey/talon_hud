@@ -23,7 +23,7 @@ event_log_text_colour,000000
 event_log_opacity,0.9
 event_log_text_opacity,0.9
 event_log_focussed_opacity,1
-event_log_ttl_duration_seconds,9
+event_log_ttl_duration_seconds,-1
 event_log_between_margin,10
 event_log_horizontal_padding,4
 event_log_vertical_padding,4
