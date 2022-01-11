@@ -1,5 +1,6 @@
+from pathlib import Path
 from user.talon_hud.base_widget import BaseWidget
-from talon import skia, ui, cron, actions
+from talon import skia, ui, cron
 import time
 import numpy
 from user.talon_hud.widget_preferences import HeadUpDisplayUserWidgetPreferences, ExtraPreference
@@ -49,7 +50,7 @@ class HeadUpEventLog(BaseWidget):
         for visual_log in self.visual_logs:
             visual_log['ttl'] = visual_log['ttl'] - previous_duration + self.ttl_duration_seconds
         
-        with open(actions.path.talon_user() / "event-log-typeface.txt") as f:
+        with open(Path.home() / "event-log-typeface.txt") as f:
             self.typeface = f.read()
                 
     def append_log(self, log):
