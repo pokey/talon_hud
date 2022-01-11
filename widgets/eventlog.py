@@ -1,5 +1,5 @@
 from user.talon_hud.base_widget import BaseWidget
-from talon import skia, ui, cron
+from talon import skia, ui, cron, actions
 import time
 import numpy
 from user.talon_hud.widget_preferences import HeadUpDisplayUserWidgetPreferences, ExtraPreference
@@ -40,7 +40,7 @@ class HeadUpEventLog(BaseWidget):
     ttl_poller = None
     
     infinite_ttl = 1000000 # One million seconds is effectively eternal from a UX perspective, as it takes 12 days
-    
+
     def load_extra_preferences(self):
         # Set and reset TTL on theme change
         previous_duration = self.ttl_duration_seconds
@@ -48,6 +48,9 @@ class HeadUpEventLog(BaseWidget):
         self.ttl_duration_seconds = self.ttl_duration_seconds if self.ttl_duration_seconds != -1 else self.infinite_ttl
         for visual_log in self.visual_logs:
             visual_log['ttl'] = visual_log['ttl'] - previous_duration + self.ttl_duration_seconds
+        
+        with open(actions.path.talon_user() / "event-log-typeface.txt") as f:
+            self.typeface = f.read()
                 
     def append_log(self, log):
         if self.soft_enabled and self.enabled and len(log['message']) > 0:        
@@ -172,6 +175,7 @@ class HeadUpEventLog(BaseWidget):
 
     def draw(self, canvas) -> bool:
         paint = self.draw_setup_mode(canvas)
+        paint.typeface = self.typeface
             
         # Clear logs that are no longer visible    
         self.visual_logs = [visual_log for visual_log in self.visual_logs if not (visual_log["animation_tick"] < 0 and visual_log["animation_tick"] == visual_log["animation_goal"]) ]
@@ -293,7 +297,7 @@ class HeadUpEventLog(BaseWidget):
             return self.draw(canvas)
 
     def draw_background(self, canvas, origin_x, origin_y, width, height, paint):
-        radius = 5
+        radius = 4
         rect = ui.Rect(origin_x, origin_y, width, height)
         rrect = skia.RoundRect.from_rect(rect, x=radius, y=radius)
         canvas.draw_rrect(rrect)
@@ -319,6 +323,6 @@ class HeadUpEventLog(BaseWidget):
                 text_height = 0
             #canvas.draw_rect(ui.Rect(x, y, self.width, 1))            
             
-            text_y = y + 1
+            text_y = y + 2
             text_height = max(text_height, text.height)
-            canvas.draw_text(text.text, x + text.x, text_y )
+            canvas.draw_text(text.text, x + text.x + 1, text_y )
