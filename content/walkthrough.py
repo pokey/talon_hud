@@ -26,6 +26,7 @@ class WalkthroughPoller:
     def __init__(self):
         self.walkthroughs = {}
         self.walkthrough_files = {}
+        self.lazy_walkthroughs = {}
         self.walkthrough_steps = {}
         self.order = []
 
@@ -107,6 +108,11 @@ class WalkthroughPoller:
         """Add a file that can be loaded in later as a walkthrough"""
         self.walkthrough_files[title] = filename
         actions.user.hud_create_walkthrough(title, [])
+
+    def add_lazy_walkthrough(self, title: str, get_walkthrough: Callable[[], list[HudWalkThroughStep]]):
+        """Add a file that can be loaded in later as a walkthrough"""
+        self.lazy_walkthroughs[title] = get_walkthrough
+        actions.user.hud_create_walkthrough(title, [])
         
     def load_walkthrough_file(self, title):
         """Load the walkthrough file"""
@@ -123,6 +129,13 @@ class WalkthroughPoller:
             
             if len(steps) > 0:
                 actions.user.hud_create_walkthrough(title, steps)
+
+    def load_lazy_walkthrough(self, title):
+        """Load the walkthrough file"""
+        steps = self.lazy_walkthroughs[title]()
+        
+        if len(steps) > 0:
+            actions.user.hud_create_walkthrough(title, steps)
         
     def add_walkthrough(self, walkthrough: HudWalkThrough):
         """Add a walkthrough to the list of walkthroughs"""
@@ -139,6 +152,9 @@ class WalkthroughPoller:
             # Preload the walkthrough from the file
             if len(self.walkthroughs[walkthrough_title].steps) == 0 and walkthrough_title in self.walkthrough_files:
                 self.load_walkthrough_file(walkthrough_title)
+
+            if len(self.walkthroughs[walkthrough_title].steps) == 0 and walkthrough_title in self.lazy_walkthroughs:
+                self.load_lazy_walkthrough(walkthrough_title)
             
             self.current_walkthrough = self.walkthroughs[walkthrough_title]
             actions.user.enable_hud_id("walk_through")
@@ -289,6 +305,11 @@ class Actions:
         """Add a walk through through a file"""
         global hud_walkthrough 
         hud_walkthrough.add_walkthrough_file(title, filename)
+
+    def hud_add_lazy_walkthrough(title: str, get_walkthrough: Callable[[], list[HudWalkThroughStep]]):
+        """Add a walk through through a file"""
+        global hud_walkthrough 
+        hud_walkthrough.add_lazy_walkthrough(title, get_walkthrough)
 
     def hud_create_walkthrough_step(content: str, context_hint: str = '', tags: list[str] = None, modes: list[str] = None, app: str = ''):
         """Create a step for a walk through"""
