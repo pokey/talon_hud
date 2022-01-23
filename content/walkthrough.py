@@ -1,3 +1,4 @@
+from typing import Any, Callable
 from talon import app, Module, actions, Context, speech_system, cron, scope
 from user.talon_hud.content.typing import HudWalkThrough, HudWalkThroughStep
 from user.talon_hud.utils import retrieve_available_voice_commands
@@ -311,12 +312,12 @@ class Actions:
         global hud_walkthrough 
         hud_walkthrough.add_lazy_walkthrough(title, get_walkthrough)
 
-    def hud_create_walkthrough_step(content: str, context_hint: str = '', tags: list[str] = None, modes: list[str] = None, app: str = ''):
+    def hud_create_walkthrough_step(content: str, context_hint: str = '', tags: list[str] = None, modes: list[str] = None, app: str = '', restore_callback: Callable[[Any, Any], None] = None):
         """Create a step for a walk through"""
         voice_commands = retrieve_available_voice_commands(content)
         tags = [] if tags is None else tags
         modes = [] if modes is None else modes
-        return HudWalkThroughStep(content, context_hint, tags, modes, app, voice_commands)
+        return HudWalkThroughStep(content, context_hint, tags, modes, app, voice_commands, restore_callback)
 
     def hud_create_walkthrough(title: str, steps: list[HudWalkThroughStep]):
         """Create a walk through with all the required steps"""

@@ -1,0 +1,9 @@
+{
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": false,
+    "editor.formatOnSaveMode": "modifications",
+    "python.defaultInterpreterPath": "~/.talon/bin/python",
+    "cSpell.words": [
+        "mkfifo"
+    ]
+}
