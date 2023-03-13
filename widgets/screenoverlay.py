@@ -1,8 +1,9 @@
+from datetime import datetime
 from user.talon_hud.base_widget import BaseWidget
 from user.talon_hud.utils import layout_rich_text, hit_test_rect, is_light_colour, hex_to_ints
 from user.talon_hud.content.typing import HudScreenRegion
 from user.talon_hud.widget_preferences import HeadUpDisplayUserWidgetPreferences
-from talon import skia, ui, cron, ctrl, canvas
+from talon import skia, ui, cron, ctrl, canvas, events
 from talon.types.point import Point2d
 import time
 import numpy
@@ -121,7 +122,9 @@ class HeadUpScreenOverlay(BaseWidget):
                         canvas_reference['callback'] = lambda canvas, self=self, region=region: self.draw_region(canvas, region)
                         canvas_reference['region'] = region
                         canvas_reference['canvas'].register('draw', canvas_reference['callback'])
+                        events.write("hud-pre-screenoverlay-update_regions", f"{datetime.now().isoformat()}")
                         canvas_reference['canvas'].freeze()
+                        events.write("hud-post-screenoverlay-update_regions", f"{datetime.now().isoformat()}")
                         self.canvases[index] = canvas_reference
                 
                 if region_found == False:
@@ -159,7 +162,9 @@ class HeadUpScreenOverlay(BaseWidget):
                 canvas_reference['callback'] = lambda canvas, self=self, region=region: self.draw_region(canvas, region)
                 canvas_reference['region'] = region
                 canvas_reference['canvas'].register('draw', canvas_reference['callback'])
+                events.write("hud-pre-screenoverlay-create_canvases", f"{datetime.now().isoformat()}")
                 canvas_reference['canvas'].freeze()
+                events.write("hud-post-screenoverlay-create_canvases", f"{datetime.now().isoformat()}")
                 self.canvases.append(canvas_reference)
             
     def clear_canvases(self):
@@ -209,7 +214,9 @@ class HeadUpScreenOverlay(BaseWidget):
         elif not has_active_region:
             self.active_regions = self.regions
             for canvas_reference in self.canvases:
+                events.write("hud-pre-screenoverlay-activate_mouse_tracking", f"{datetime.now().isoformat()}")
                 canvas_reference['canvas'].freeze()
+                events.write("hud-post-screenoverlay-activate_mouse_tracking", f"{datetime.now().isoformat()}")
     
     def poll_mouse_pos(self):
         if self.enabled:
@@ -242,9 +249,12 @@ class HeadUpScreenOverlay(BaseWidget):
         if self.active_regions != active_regions:
             self.active_regions = active_regions
             for canvas_reference in self.canvases:
+                events.write("hud-pre-screenoverlay-determine_active_regions", f"{datetime.now().isoformat()}")
                 canvas_reference['canvas'].freeze()
+                events.write("hud-post-screenoverlay-determine_active_regions", f"{datetime.now().isoformat()}")
             
     def draw_region(self, canvas, region, setup_region = False) -> bool:
+        events.write("hud-pre-screenoverlay-draw_region", f"{datetime.now().isoformat()}")
         paint = self.draw_setup_mode(canvas)
         paint.textsize = self.font_size        
         if self.soft_enabled:
@@ -318,6 +328,7 @@ class HeadUpScreenOverlay(BaseWidget):
                 
                 paint.color = text_colour
                 self.draw_rich_text(canvas, paint, content_text, text_x, text_y, 0, True)            
+        events.write("hud-post-screenoverlay-draw_region", f"{datetime.now().isoformat()}")
                 
         
     def draw_icon(self, canvas, origin_x, origin_y, diameter, paint, region, active):
@@ -416,13 +427,17 @@ class HeadUpScreenOverlay(BaseWidget):
                 for canvas_reference in self.canvases:
                     canvas_rect = self.align_region_canvas_rect(canvas_reference['region'])
                     canvas_reference['canvas'].rect = canvas_rect
+                    events.write("hud-pre-screenoverlay-start_setup-cancel", f"{datetime.now().isoformat()}")
                     canvas_reference['canvas'].freeze()
+                    events.write("hud-post-screenoverlay-start_setup-cancel", f"{datetime.now().isoformat()}")
                     
         elif setup_type == "reload":
             self.drag_position = []  
             self.setup_type = ""
             for canvas_reference in self.canvases:
+                events.write("hud-pre-screenoverlay-start_setup-reload", f"{datetime.now().isoformat()}")
                 canvas_reference['canvas'].freeze()
+                events.write("hud-post-screenoverlay-start_setup-reload", f"{datetime.now().isoformat()}")
                 
         # Start the setup by mocking a full screen screen region to place the canvas in
         else:
@@ -451,10 +466,13 @@ class HeadUpScreenOverlay(BaseWidget):
             for canvas_reference in self.canvases:
                 canvas_rect = self.align_region_canvas_rect(canvas_reference['region'])
                 canvas_reference['canvas'].rect = canvas_rect            
+                events.write("hud-pre-screenoverlay-setup_move", f"{datetime.now().isoformat()}")
                 canvas_reference['canvas'].freeze()
+                events.write("hud-post-screenoverlay-setup_move", f"{datetime.now().isoformat()}")
             
 
     def setup_draw_cycle(self, canvas):
+        events.write("hud-pre-screenoverlay-setup_draw_cycle", f"{datetime.now().isoformat()}")
         """Drawing cycle that mimics a screen region set up"""
         region = HudScreenRegion('setup', 'Setup mode text', 'command_icon', 'DD4500', canvas.rect, \
             Point2d(canvas.rect.x, canvas.rect.y), vertical_centered = True)
@@ -463,6 +481,7 @@ class HeadUpScreenOverlay(BaseWidget):
         self.draw_region(canvas, region, True)
         if self.canvas:
             self.canvas.pause()
+        events.write("hud-post-screenoverlay-setup_draw_cycle", f"{datetime.now().isoformat()}")
 
     def set_preference(self, preference, value, persisted=False):
         # Copied over from base widget to reflect the no-canvas state of this widget
@@ -473,7 +492,9 @@ class HeadUpScreenOverlay(BaseWidget):
             for canvas_reference in self.canvases:
                 canvas_rect = self.align_region_canvas_rect(canvas_reference['region'])
                 canvas_reference['canvas'].move(canvas_rect.x, canvas_rect.y)            
+                events.write("hud-pre-screenoverlay-set_preference", f"{datetime.now().isoformat()}")
                 canvas_reference['canvas'].freeze()
+                events.write("hud-post-screenoverlay-set_preference", f"{datetime.now().isoformat()}")
         
         if persisted:
             self.preferences.mark_changed = True
@@ -485,8 +506,12 @@ class HeadUpScreenOverlay(BaseWidget):
         self.load_theme_values()
         if self.enabled:
             if self.canvas:
+                events.write("hud-pre-screenoverlay-set_theme", f"{datetime.now().isoformat()}")
                 self.canvas.freeze()
+                events.write("hud-post-screenoverlay-set_theme", f"{datetime.now().isoformat()}")
             self.animation_tick = self.animation_max_duration if self.show_animations else 0
             for canvas_reference in self.canvases:
+                events.write("hud-pre-screenoverlay-set_theme-loop", f"{datetime.now().isoformat()}")
                 canvas_reference['canvas'].freeze()
+                events.write("hud-post-screenoverlay-set_theme-loop", f"{datetime.now().isoformat()}")
             

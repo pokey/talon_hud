@@ -1,4 +1,5 @@
-from talon import skia, ui, cron, clip
+from datetime import datetime
+from talon import skia, ui, cron, clip, events
 from user.talon_hud.layout_widget import LayoutWidget
 from user.talon_hud.widgets.textpanel import HeadUpTextPanel
 from user.talon_hud.widget_preferences import HeadUpDisplayUserWidgetPreferences
@@ -298,5 +299,7 @@ class HeadUpChoicePanel(HeadUpTextPanel):
         
         self.capture_rect = rect
         self.mouse_capture_canvas.rect = rect
+        events.write("hud-pre-choicepanel-resize_mouse_canvas", f"{datetime.now().isoformat()}")
         self.mouse_capture_canvas.freeze()
+        events.write("hud-post-choicepanel-resize_mouse_canvas", f"{datetime.now().isoformat()}")
         self.mark_layout_invalid = False

@@ -1,4 +1,5 @@
-from talon import skia, cron, ctrl, scope, canvas, ui
+from datetime import datetime
+from talon import skia, cron, ctrl, scope, canvas, ui, events
 from talon.types import Point2d
 from abc import ABCMeta
 import numpy
@@ -177,6 +178,7 @@ class BaseWidget(metaclass=ABCMeta):
 
     # Central drawing cycle attached to the canvas
     def draw_cycle(self, canvas):
+        events.write("hud-pre-base_widget-draw_cycle", f"{datetime.now().isoformat()}")
         continue_drawing = False
         
         if self.animation_tick != 0:
@@ -198,6 +200,7 @@ class BaseWidget(metaclass=ABCMeta):
             self.animation_tick = 0
             if not self.enabled:
                 self.clear()
+        events.write("hud-post-base_widget-draw_cycle", f"{datetime.now().isoformat()}")
     
     def draw_setup_mode(self, canvas) -> skia.Paint:
         """Implements drawing the dimension lines when resizing elements"""    

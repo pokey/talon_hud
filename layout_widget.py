@@ -1,4 +1,5 @@
-from talon import Context, Module, actions, app, skia, cron, ctrl, scope, canvas, registry, settings, ui
+from datetime import datetime
+from talon import Context, Module, events, actions, app, skia, cron, ctrl, scope, canvas, registry, settings, ui
 from talon.types import Point2d
 from abc import ABCMeta
 import numpy
@@ -25,7 +26,9 @@ class LayoutWidget(BaseWidget):
                 self.mouse_capture_canvas = canvas.Canvas(min(self.x, self.limit_x), min(self.y, self.limit_y), max(self.width, self.limit_width), max(self.height, self.limit_height))            
                 self.mouse_capture_canvas.blocks_mouse = True
                 self.mouse_capture_canvas.register('mouse', self.on_mouse)
+                events.write("hud-pre-layout-enable", f"{datetime.now().isoformat()}")
                 self.mouse_capture_canvas.freeze()
+                events.write("hud-post-layout-enable", f"{datetime.now().isoformat()}")
             
             # Copied over from base widget enabled to make sure blocks_mouse setting isn't changed
             self.enabled = True
@@ -146,7 +149,9 @@ class LayoutWidget(BaseWidget):
         rect = content_dimensions["rect"]
         self.capture_rect = rect
         self.mouse_capture_canvas.rect = rect
+        events.write("hud-pre-resize_mouse_canvas", f"{datetime.now().isoformat()}")
         self.mouse_capture_canvas.freeze()
+        events.write("hud-post-resize_mouse_canvas", f"{datetime.now().isoformat()}")
         self.mark_layout_invalid = False
         
         

@@ -1,8 +1,9 @@
+from datetime import datetime
 from user.talon_hud.base_widget import BaseWidget
 from user.talon_hud.utils import hit_test_rect
 from user.talon_hud.content.typing import HudScreenRegion
 from user.talon_hud.widget_preferences import HeadUpDisplayUserWidgetPreferences
-from talon import skia, ui, cron, ctrl
+from talon import skia, ui, cron, ctrl, events
 from talon.types.point import Point2d
 import time
 import numpy
@@ -94,7 +95,9 @@ class HeadUpCursorTracker(BaseWidget):
                     self.canvas.move(self.x, self.y)
                     
                     self.determine_active_icon(pos)
+                    events.write("hud-pre-cursortracker-poll_mouse_pos", f"{datetime.now().isoformat()}")
                     self.canvas.freeze()
+                    events.write("hud-post-cursortracker-poll_mouse_pos", f"{datetime.now().isoformat()}")
     
     # Determine the active icon based on the region the icon is in
     # If multiple regions overlap, choose the smaller more specific one
