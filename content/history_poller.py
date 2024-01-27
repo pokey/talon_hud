@@ -1,6 +1,8 @@
-from talon import actions, cron, scope, speech_system, ui, app
-from user.talon_hud.content.poller import Poller
 import time
+
+from talon import actions, app, cron, scope, speech_system, ui
+from user.talon_hud.content.poller import Poller
+
 
 # Handles state of phrases
 # Inspired by the command history from knausj
@@ -19,11 +21,13 @@ class HistoryPoller(Poller):
         if not actions.speech.enabled():
             return
 
-        try:
-            word_list = getattr(j["parsed"], "_unmapped", j["phrase"])
-        except:
-            word_list = j["phrase"]
-        command = parse_phrase(word_list)
+        words = j.get("text")
+
+        command = actions.user.history_transform_phrase_text(words)
+
+        if command is None:
+            return
+
         actions.user.hud_add_log("command", command)
         
         # Debugging data
@@ -38,14 +42,3 @@ class HistoryPoller(Poller):
             model = meta["desc"] if "desc" in meta else "-"
         
         actions.user.hud_add_phrase(command, timestamp, float(time_ms), model, mic)
-
-
-def parse_phrase(word_list):
-    words = [word.split("\\")[0] for word in word_list]
-
-    try:
-        words = words[: words.index("drowse")]
-    except ValueError:
-        pass
-
-    return " ".join(words)        
