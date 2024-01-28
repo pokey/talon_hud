@@ -1,7 +1,7 @@
-from user.talon_hud.base_widget import BaseWidget
-from user.talon_hud.utils import hit_test_rect
-from user.talon_hud.content.typing import HudScreenRegion
-from user.talon_hud.widget_preferences import HeadUpDisplayUserWidgetPreferences
+from ..base_widget import BaseWidget
+from ..utils import hit_test_rect
+from ..content.typing import HudScreenRegion
+from ..widget_preferences import HeadUpDisplayUserWidgetPreferences
 from talon import skia, ui, cron, ctrl
 from talon.types.point import Point2d
 import time
@@ -17,38 +17,37 @@ class HeadUpCursorTracker(BaseWidget):
     mouse_poller = None
     prev_mouse_pos = None
     smooth_mode = True
+    canvas_visibility = True
 
     preferences = HeadUpDisplayUserWidgetPreferences(type="cursor_tracker", x=15, y=15, width=15, height=15, enabled=True, sleep_enabled=False)
-    subscribed_content = [
-        "mode",
-        "screen_regions"
-    ]
     
+    # New content topic types
+    topic_types = ["cursor_regions"]
+    current_topics = []
+    subscriptions = ["*"]
+
     active_icon = None
     cursor_icons = []
-    content = {
-        'mode': 'command',
-        "screen_regions": {
-           "cursor": []
-        }
-    }        
-    
-    def refresh(self, new_content):
-        if ("mode" in new_content and new_content["mode"] != self.content['mode']):
-            if (new_content["mode"] == 'sleep'):
-                self.soft_disable()
-            else:
-                self.soft_enable()
 
-        if "screen_regions" in new_content and "cursor" in new_content["screen_regions"]:
-            self.update_icons(new_content["screen_regions"]["cursor"])
+    def refresh(self, new_content):
+        if not self.sleep_enabled and "event" in new_content and new_content["event"].topic_type == "variable" and new_content["event"].topic == "mode":
+            if new_content["event"].content == "sleep":
+                self.soft_disable()
+            elif self.cursor_icons:
+                self.soft_enable()
+                self.poll_mouse_pos(True)  
+
+        if "event" in new_content and new_content["event"].topic_type == "cursor_regions":
+            self.update_icons()
 
     def enable(self, persist=False):
         if not self.enabled:
-            self.previous_pos = ctrl.mouse_pos()
-            self.determine_active_icon(self.previous_pos)
             super().enable(persist)
-            self.soft_enable()
+            if self.cursor_icons:
+                self.prev_mouse_pos = ctrl.mouse_pos()
+                self.determine_active_icon(self.prev_mouse_pos)            
+                self.soft_enable()
+                self.set_visibility(True)
     
     def disable(self, persist=False):
         if self.enabled:
@@ -58,43 +57,56 @@ class HeadUpCursorTracker(BaseWidget):
     def soft_enable(self):
         if not self.soft_enabled:
             self.soft_enabled = True
-            self.mouse_poller = cron.interval('30ms', self.poll_mouse_pos)
-            self.canvas.resume()
+            cron.cancel(self.mouse_poller)
+            self.mouse_poller = cron.interval("30ms", self.poll_mouse_pos)
+            if self.canvas:
+                pos = ctrl.mouse_pos()
+                self.x = pos[0] + self.limit_x
+                self.y = pos[1] + self.limit_y
+                self.canvas.move(self.x, self.y)
+                self.canvas.freeze()
             
     def soft_disable(self):
         if self.soft_enabled:
             self.soft_enabled = False
             cron.cancel(self.mouse_poller)
+            self.prev_mouse_pos = None
             self.mouse_poller = None
-            self.canvas.resume()
-            
-    def update_icons(self, cursor_icons: list[HudScreenRegion] = None):
-        soft_enable = False    
+            if self.canvas:
+                self.canvas.freeze()
+
+    def update_icons(self):
+        updated = False
+        cursor_icons = self.content.get_topic("cursor_regions")
         if cursor_icons != None:
-            new_icons = cursor_icons          
-            soft_enable = self.cursor_icons != new_icons and len(new_icons) > 0
+            new_icons = cursor_icons[:]
+            updated = self.cursor_icons != new_icons and len(new_icons) > 0
             self.cursor_icons = new_icons
         
         if self.cursor_icons:
-            if soft_enable:
-                self.soft_enable()
+            if updated: 
+                if not self.soft_enabled:
+                    self.soft_enable()
+                else:
+                    self.poll_mouse_pos(True)
         else:
             self.soft_disable()
     
-    def poll_mouse_pos(self):
+    def poll_mouse_pos(self, forced_update = False):
         if self.canvas:
             pos = ctrl.mouse_pos()
             distance_threshold = 0.5 if self.smooth_mode else 20
-            if (self.prev_mouse_pos is None or numpy.linalg.norm(numpy.array(pos) - numpy.array(self.prev_mouse_pos)) > distance_threshold):
+            if (forced_update or self.prev_mouse_pos is None or numpy.linalg.norm(numpy.array(pos) - numpy.array(self.prev_mouse_pos)) > distance_threshold):
                 self.prev_mouse_pos = pos
                 
                 if self.setup_type == "":
                     self.x = pos[0] + self.limit_x
                     self.y = pos[1] + self.limit_y
-                    self.canvas.move(self.x, self.y)
                     
+                    self.canvas.move(self.x, self.y)
                     self.determine_active_icon(pos)
-                    self.canvas.freeze()
+                    if self.canvas_visibility:
+                        self.canvas.freeze()
     
     # Determine the active icon based on the region the icon is in
     # If multiple regions overlap, choose the smaller more specific one
@@ -163,15 +175,12 @@ class HeadUpCursorTracker(BaseWidget):
             
             self.setup_type = setup_type
             self.preferences.mark_changed = True
-            self.canvas.resume()
+            self.canvas.freeze()
             self.event_dispatch.request_persist_preferences()
         # Cancel every change
         else:
-            self.x = pos[0]
-            self.y = pos[1]
-            self.canvas.move(self.x, self.y)
-            self.canvas.resume()
             super().start_setup(setup_type, mouse_position)
+            self.canvas.freeze()
                 
     def setup_move(self, pos):
         """Responds to global mouse movements when a widget is in a setup mode"""
@@ -179,3 +188,7 @@ class HeadUpCursorTracker(BaseWidget):
             pass
         elif (self.setup_type in ["dimension", "limit", "font_size"] ):
             super().setup_move(pos)
+
+    def set_visibility(self, visible = True):
+        super().set_visibility(visible)
+        self.canvas_visibility = visible
