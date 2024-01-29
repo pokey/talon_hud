@@ -161,6 +161,7 @@ class HeadUpDisplayUserWidgetPreferences:
         if (id + "_expand_direction") in persisted_dict:
             self.expand_direction = persisted_dict[id + "_expand_direction"]
         if (id + "_minimized") in persisted_dict:
+            self.minimized = int(persisted_dict[id + "_minimized"]) > 0
             
         if (id + "_current_topics") in persisted_dict:
             self.current_topics = persisted_dict[id + "_current_topics"].split(",")
