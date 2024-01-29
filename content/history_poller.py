@@ -18,12 +18,7 @@ class HistoryPoller(Poller):
         speech_system.unregister("phrase", self.on_phrase)
             
     def on_phrase(self, j):
-        if not actions.speech.enabled():
-            return
-
-        words = j.get("text")
-
-        command = actions.user.history_transform_phrase_text(words)
+        command = actions.user.history_transform_phrase_text(j.get("text"))
 
         if command is None:
             return
