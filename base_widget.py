@@ -86,7 +86,6 @@ class BaseWidget(metaclass=ABCMeta):
         if self.preferences.current_topics is not None:
             self.current_topics = self.preferences.current_topics
             self.content.set_persisted_topics(self.preferences.current_topics)
-        
         self.load_extra_preferences()
         
         # For re-enabling or disabling widgets after a reload ( mostly for talon hud environment changes )
